@@ -17,4 +17,8 @@
     <Folder Include="Controllers\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\BoxBoxModels\BoxBoxModels.csproj" />
+  </ItemGroup>
+
 </Project>
