@@ -1,5 +1,8 @@
 ﻿using BoxBoxApi.Data;
 using BoxBoxModels;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using System.Data;
 
 namespace BoxBoxApi.Repositories
 {
@@ -12,179 +15,506 @@ namespace BoxBoxApi.Repositories
             this.context = context;
         }
 
-        public Task<Conversation> CreateConversationAsync(Conversation conversacion)
+        #region Topics
+
+        public async Task<List<VTopic>> GetVTopicsAsync()
         {
-            throw new NotImplementedException();
+            return await
+                this.context.VTopics.ToListAsync();
         }
 
-        public Task CreateDriverAsync(Driver conductor)
+        public async Task<Topic> FindTopicAsync(int topicId)
         {
-            throw new NotImplementedException();
+            return await
+                this.context.Topics.FirstOrDefaultAsync
+                (x => x.TopicId == topicId);
         }
 
-        public Task CreatePostAsync(Post posteo)
+        private async Task<int> GetMaxTopicId()
         {
-            throw new NotImplementedException();
+            if (this.context.Topics.Count() == 0)
+            {
+                return 1;
+            }
+            else
+            {
+                return await
+                    this.context.Topics.MaxAsync(t => t.TopicId) + 1;
+            }
         }
 
-        public Task CreateRaceAsync(Race carrera)
+        public async Task CreateTopicAsync(Topic tema)
         {
-            throw new NotImplementedException();
+            Topic topic = new Topic();
+            topic.TopicId = await this.GetMaxTopicId();
+            topic.Title = tema.Title;
+            topic.Description = tema.Description;
+
+            this.context.Topics.Add(topic);
+            await this.context.SaveChangesAsync();
         }
 
-        public Task CreateTeamAsync(Team equipo)
+        public async Task UpdateTopicAsync(Topic tema)
         {
-            throw new NotImplementedException();
+            Topic topic = await this.FindTopicAsync(tema.TopicId);
+            topic.Title = tema.Title;
+            topic.Description = tema.Description;
+
+            await this.context.SaveChangesAsync();
         }
 
-        public Task CreateTopicAsync(Topic tema)
+        public async Task DeleteTopicAsync(int topicId)
         {
-            throw new NotImplementedException();
+            Topic topic = await this.FindTopicAsync(topicId);
+            this.context.Topics.Remove(topic);
+            await this.context.SaveChangesAsync();
         }
 
-        public Task DeleteConversationAsync(int conversationId)
+        #endregion
+
+        #region Conversations
+        public async Task<ConversationsPaginado> GetVConversationsTopicAsync(int posicion, int topicId)
         {
-            throw new NotImplementedException();
+            #region Stored Procedure
+
+            /*
+            CREATE OR ALTER PROCEDURE SP_PAGINACION_CONVERSATIONS
+            (@POSICION INT, @IDTOPIC INT, @REGISTROS INT OUT)
+            AS
+	            SELECT @REGISTROS = COUNT(ConversationID)
+	            FROM V_Conversations
+	            WHERE TopicID = @IDTOPIC
+	            SELECT ConversationID, TopicID, UserID, Title, EntryCount, CreatedAt, PostCount, LastMessage
+	            FROM
+	            (
+		            SELECT CAST(ROW_NUMBER() OVER (ORDER BY ConversationID) AS int)
+		            AS POSICION, ConversationID, TopicID, UserID, Title, EntryCount, CreatedAt, PostCount, LastMessage
+		            FROM V_Conversations
+		            WHERE TopicID = @IDTOPIC
+	            )
+	            AS QUERY
+	            where posicion >= @posicion and posicion < (@posicion + 10)
+            GO
+            */
+
+            #endregion
+            string sql = "SP_PAGINACION_CONVERSATIONS @posicion, @idtopic, @registros out";
+            SqlParameter pamPosicion = new SqlParameter("@posicion", posicion);
+            SqlParameter pamTopicId = new SqlParameter("@idtopic", topicId);
+            SqlParameter pamRegistros = new SqlParameter("@registros", -1);
+            pamRegistros.Direction = ParameterDirection.Output;
+
+            var consulta = this.context.VConversations.FromSqlRaw
+                (sql, pamPosicion, pamTopicId, pamRegistros);
+            var datos = await consulta.ToListAsync();
+
+            return new ConversationsPaginado
+            {
+                Registros = (int)pamRegistros.Value,
+                Conversations = datos
+            };
         }
 
-        public Task DeleteDriverAsync(int driverId)
+        public async Task<Conversation> FindConversationAsync(int conversationId)
         {
-            throw new NotImplementedException();
+            return await
+                this.context.Conversations.FirstOrDefaultAsync
+                (x => x.ConversationId == conversationId);
         }
 
-        public Task DeletePostAsync(int postId)
+        private async Task<int> GetMaxConversationId()
         {
-            throw new NotImplementedException();
+            if (this.context.Conversations.Count() == 0)
+            {
+                return 1;
+            }
+            else
+            {
+                return await
+                    this.context.Conversations.MaxAsync(c => c.ConversationId) + 1;
+            }
         }
 
-        public Task DeleteRaceAsync(int raceId)
+        public async Task<Conversation> CreateConversationAsync(Conversation conversacion)
         {
-            throw new NotImplementedException();
+            Conversation conversation = new Conversation();
+            conversation.ConversationId = await this.GetMaxConversationId();
+            conversation.TopicId = conversacion.TopicId;
+            conversation.UserId = conversacion.UserId;
+            conversation.Title = conversacion.Title;
+            conversation.CreatedAt = DateTime.UtcNow;
+
+            this.context.Conversations.Add(conversation);
+            await this.context.SaveChangesAsync();
+
+            return conversation;
         }
 
-        public Task DeleteTeamAsync(int teamId)
+        public async Task UpdateConversationAsync(Conversation conversacion)
         {
-            throw new NotImplementedException();
+            Conversation conversation = await this.FindConversationAsync(conversacion.ConversationId);
+
+            conversation.Title = conversacion.Title;
+
+            await this.context.SaveChangesAsync();
         }
 
-        public Task DeleteTopicAsync(int topicId)
+        public async Task DeleteConversationAsync(int conversationId)
         {
-            throw new NotImplementedException();
+            Conversation conversation = await this.FindConversationAsync(conversationId);
+
+            this.context.Conversations.Remove(conversation);
+            await this.context.SaveChangesAsync();
         }
 
-        public Task<Conversation> FindConversationAsync(int conversationId)
+        public async Task UpdateEntryCount(int conversationId)
         {
-            throw new NotImplementedException();
+            #region Stored Procedure
+
+            //CREATE PROCEDURE SP_UPDATE_ENTRYCOUNT
+            //    @conversationID INT
+            //AS
+            //BEGIN
+            //    UPDATE Conversations
+            //    SET EntryCount = EntryCount + 1
+            //    WHERE ConversationID = @conversationID;
+            //END;
+
+            #endregion
+            string sql = "SP_UPDATE_ENTRYCOUNT @conversationID";
+            SqlParameter pamId = new SqlParameter("@conversationID", conversationId);
+            await this.context.Database.ExecuteSqlRawAsync(sql, pamId);
         }
 
-        public Task<Driver> FindDriverAsync(int driverId)
+        #endregion
+
+        #region Posts
+
+        public async Task<PostsPaginado> GetPostsConversationAsync(int posicion, int conversationId)
         {
-            throw new NotImplementedException();
+            #region Stored Procedure
+
+            /*
+            CREATE OR ALTER PROCEDURE SP_PAGINACION_POSTS
+            (@POSICION INT, @IDCONVERSACION INT, @REGISTROS INT OUT)
+            AS
+	            SELECT @REGISTROS = COUNT(PostID)
+	            FROM Posts
+	            WHERE ConversationID = @IDCONVERSACION
+	            SELECT PostID, ConversationID, UserID, Text, CreatedAt, Estado
+	            FROM
+	            (
+		            SELECT CAST(ROW_NUMBER() OVER (ORDER BY PostID) AS int)
+		            AS POSICION, PostID, ConversationID, UserID, Text, CreatedAt, Estado
+		            FROM Posts
+		            WHERE ConversationID = @IDCONVERSACION
+	            )
+	            AS QUERY
+	            where posicion >= @posicion and posicion < (@posicion + 10)
+            GO
+            */
+
+            #endregion
+            string sql = "SP_PAGINACION_POSTS @posicion, @idconversacion, @registros out";
+            SqlParameter pamPosicion = new SqlParameter("@posicion", posicion);
+            SqlParameter pamConversationId = new SqlParameter("@idconversacion", conversationId);
+            SqlParameter pamRegistros = new SqlParameter("@registros", -1);
+            pamRegistros.Direction = ParameterDirection.Output;
+
+            var consulta = this.context.Posts.FromSqlRaw
+                (sql, pamPosicion, pamConversationId, pamRegistros);
+            var datos = await consulta.ToListAsync();
+
+            return new PostsPaginado
+            {
+                Registros = (int)pamRegistros.Value,
+                Posts = datos
+            };
         }
 
-        public Task<Post> FindPostAsync(int postId)
+        public async Task<Post> FindPostAsync(int postId)
         {
-            throw new NotImplementedException();
+            return await
+                this.context.Posts.FirstOrDefaultAsync
+                (x => x.PostId == postId);
         }
 
-        public Task<Race> FindRaceAsync(int raceId)
+        private async Task<int> GetMaxPostId()
         {
-            throw new NotImplementedException();
+            if (this.context.Posts.Count() == 0)
+            {
+                return 1;
+            }
+            else
+            {
+                return await
+                    this.context.Posts.MaxAsync(p => p.PostId) + 1;
+            }
         }
 
-        public Task<Team> FindTeamAsync(int teamId)
+        public async Task CreatePostAsync(Post posteo)
         {
-            throw new NotImplementedException();
+            Post post = new Post();
+            post.PostId = await this.GetMaxPostId();
+            post.ConversationId = posteo.ConversationId;
+            post.UserId = posteo.UserId;
+            post.Text = posteo.Text;
+            post.CreatedAt = DateTime.UtcNow;
+            post.Estado = 0;
+
+            this.context.Posts.Add(post);
+            await this.context.SaveChangesAsync();
         }
 
-        public Task<Topic> FindTopicAsync(int topicId)
+        public async Task UpdatePostAsync(Post posteo)
         {
-            throw new NotImplementedException();
+            Post post = await this.FindPostAsync(posteo.PostId);
+            post.ConversationId = posteo.ConversationId;
+            post.UserId = posteo.UserId;
+            post.Text = posteo.Text;
+
+            this.context.Posts.Add(post);
+            await this.context.SaveChangesAsync();
         }
 
-        public Task<User> FindUserAsync(int userId)
+        public async Task DeletePostAsync(int postId)
         {
-            throw new NotImplementedException();
+            Post post = await this.FindPostAsync(postId);
+
+            this.context.Posts.Remove(post);
+            await this.context.SaveChangesAsync();
         }
 
-        public Task<List<Driver>> GetDriversAsync()
+        public async Task<List<Post>> GetReportedPosts()
         {
-            throw new NotImplementedException();
+            return await
+                this.context.Posts
+                .Where(x => x.Estado == 1).ToListAsync();
         }
 
-        public Task<PostsPaginado> GetPostsConversationAsync(int posicion, int conversationId)
+        public async Task ReportPostAsync(int postId)
         {
-            throw new NotImplementedException();
+            Post post = await this.FindPostAsync(postId);
+            post.Estado = 1;
+
+            await this.context.SaveChangesAsync();
         }
 
-        public Task<List<Race>> GetRacesAsync()
+        public async Task UnreportPostAsync(int postId)
         {
-            throw new NotImplementedException();
+            Post post = await this.FindPostAsync(postId);
+            post.Estado = 0;
+
+            await this.context.SaveChangesAsync();
         }
 
-        public Task<List<Post>> GetReportedPosts()
+        #endregion
+
+        #region Drivers
+        public async Task<List<Driver>> GetDriversAsync()
         {
-            throw new NotImplementedException();
+            return await
+                this.context.Drivers.ToListAsync();
         }
 
-        public Task<List<Team>> GetTeamsAsync()
+        public async Task<Driver> FindDriverAsync(int driverId)
         {
-            throw new NotImplementedException();
+            return await
+                this.context.Drivers.FirstOrDefaultAsync
+                (x => x.DriverID == driverId);
         }
 
-        public Task<ConversationsPaginado> GetVConversationsTopicAsync(int posicion, int topicId)
+        private async Task<int> GetMaxDriverId()
         {
-            throw new NotImplementedException();
+            if (this.context.Drivers.Count() == 0)
+            {
+                return 1;
+            }
+            else
+            {
+                return await
+                    this.context.Drivers.MaxAsync(d => d.DriverID) + 1;
+            }
         }
 
-        public Task<List<VTopic>> GetVTopicsAsync()
+        public async Task CreateDriverAsync(Driver conductor)
         {
-            throw new NotImplementedException();
+            Driver driver = new Driver();
+            driver.DriverID = await this.GetMaxDriverId();
+            driver.DriverName = conductor.DriverName;
+            driver.CarNumber = conductor.CarNumber;
+            driver.TeamID = conductor.TeamID;
+            driver.Flag = conductor.Flag;
+            driver.Imagen = conductor.Imagen;
+
+            this.context.Drivers.Add(driver);
+            await this.context.SaveChangesAsync();
         }
 
-        public Task ReportPostAsync(int postId)
+        public async Task UpdateDriverAsync(Driver conductor)
         {
-            throw new NotImplementedException();
+            Driver driver = await this.FindDriverAsync(conductor.DriverID);
+            driver.DriverName = conductor.DriverName;
+            driver.CarNumber = conductor.CarNumber;
+            driver.TeamID = conductor.TeamID;
+            driver.Flag = conductor.Flag;
+            driver.Imagen = conductor.Imagen;
+
+            await this.context.SaveChangesAsync();
         }
 
-        public Task UpdateConversationAsync(Conversation conversacion)
+        public async Task DeleteDriverAsync(int driverId)
         {
-            throw new NotImplementedException();
+            Driver driver = await this.FindDriverAsync(driverId);
+
+            this.context.Drivers.Remove(driver);
+            await this.context.SaveChangesAsync();
         }
 
-        public Task UpdateDriverAsync(Driver conductor)
+        #endregion
+
+        #region Teams
+
+        public async Task<List<Team>> GetTeamsAsync()
         {
-            throw new NotImplementedException();
+            return await
+                this.context.Teams.ToListAsync();
         }
 
-        public Task UpdateEntryCount(int conversationId)
+        public async Task<Team> FindTeamAsync(int teamId)
         {
-            throw new NotImplementedException();
+            return await
+                this.context.Teams.FirstOrDefaultAsync
+                (x => x.TeamId == teamId);
         }
 
-        public Task UpdatePostAsync(Post posteo)
+        private async Task<int> GetMaxTeamId()
         {
-            throw new NotImplementedException();
+            if (this.context.Teams.Count() == 0)
+            {
+                return 1;
+            }
+            else
+            {
+                return await
+                    this.context.Teams.MaxAsync(t => t.TeamId) + 1;
+            }
         }
 
-        public Task UpdateRaceAsync(Race carrera)
+        public async Task CreateTeamAsync(Team equipo)
         {
-            throw new NotImplementedException();
+            Team team = new Team();
+            team.TeamId = await this.GetMaxTeamId();
+            team.TeamName = equipo.TeamName;
+            team.Logo = equipo.Logo;
+
+            this.context.Teams.Add(team);
+            await this.context.SaveChangesAsync();
         }
 
-        public Task UpdateTeamAsync(Team equipo)
+        public async Task UpdateTeamAsync(Team equipo)
         {
-            throw new NotImplementedException();
+            Team team = await this.FindTeamAsync(equipo.TeamId);
+            team.TeamName = equipo.TeamName;
+            team.Logo = equipo.Logo;
+
+            await this.context.SaveChangesAsync();
         }
 
-        public Task UpdateTopicAsync(Topic tema)
+        public async Task DeleteTeamAsync(int teamId)
         {
-            throw new NotImplementedException();
+            Team team = await this.FindTeamAsync(teamId);
+
+            this.context.Teams.Remove(team);
+            await this.context.SaveChangesAsync();
         }
 
-        public Task UpdateUserAsync(User user)
+        #endregion
+
+        #region Races
+
+        public async Task<List<Race>> GetRacesAsync()
         {
-            throw new NotImplementedException();
+            return await
+                this.context.Races.ToListAsync();
         }
+
+        public async Task<Race> FindRaceAsync(int raceId)
+        {
+            return await
+                this.context.Races.FirstOrDefaultAsync
+                (x => x.RaceId == raceId);
+        }
+
+        private async Task<int> GetMaxRaceId()
+        {
+            if (this.context.Races.Count() == 0)
+            {
+                return 1;
+            }
+            else
+            {
+                return await
+                    this.context.Races.MaxAsync(r => r.RaceId) + 1;
+            }
+        }
+
+        public async Task CreateRaceAsync(Race carrera)
+        {
+            Race race = new Race();
+            race.RaceId = await this.GetMaxRaceId();
+            race.RaceName = carrera.RaceName;
+            race.Image = carrera.Image;
+            race.Location = carrera.Location;
+            race.StartDate = carrera.StartDate;
+            race.EndDate = carrera.EndDate;
+
+            this.context.Races.Add(race);
+            await this.context.SaveChangesAsync();
+        }
+
+        public async Task UpdateRaceAsync(Race carrera)
+        {
+            Race race = await this.FindRaceAsync(carrera.RaceId);
+            race.RaceName = carrera.RaceName;
+            race.Image = carrera.Image;
+            race.Location = carrera.Location;
+            race.StartDate = carrera.StartDate;
+            race.EndDate = carrera.EndDate;
+
+            await this.context.SaveChangesAsync();
+        }
+
+        public async Task DeleteRaceAsync(int raceId)
+        {
+            Race race = await this.FindRaceAsync(raceId);
+
+            this.context.Races.Remove(race);
+            await this.context.SaveChangesAsync();
+        }
+
+        #endregion
+
+        #region Users
+
+        public async Task<User> FindUserAsync(int userId)
+        {
+            return await
+                this.context.Users.FirstOrDefaultAsync
+                (x => x.UserId == userId);
+        }
+
+        public async Task UpdateUserAsync(User user)
+        {
+            User usuario = await this.FindUserAsync(user.UserId);
+            usuario.UserName = user.UserName;
+            usuario.ProfilePicture = user.ProfilePicture;
+            usuario.TeamId = user.TeamId;
+            usuario.DriverId = user.DriverId;
+
+            await this.context.SaveChangesAsync();
+        }
+
+        #endregion
     }
 }

@@ -4,40 +4,54 @@ namespace BoxBoxApi.Repositories
 {
     public interface IRepositoryBoxBox
     {
-        Task<Conversation> CreateConversationAsync(Conversation conversacion);
-        Task CreateDriverAsync(Driver conductor);
-        Task CreatePostAsync(Post posteo);
-        Task CreateRaceAsync(Race carrera);
-        Task CreateTeamAsync(Team equipo);
-        Task CreateTopicAsync(Topic tema);
-        Task DeleteConversationAsync(int conversationId);
-        Task DeleteDriverAsync(int driverId);
-        Task DeletePostAsync(int postId);
-        Task DeleteRaceAsync(int raceId);
-        Task DeleteTeamAsync(int teamId);
-        Task DeleteTopicAsync(int topicId);
-        Task<Conversation> FindConversationAsync(int conversationId);
-        Task<Driver> FindDriverAsync(int driverId);
-        Task<Post> FindPostAsync(int postId);
-        Task<Race> FindRaceAsync(int raceId);
-        Task<Team> FindTeamAsync(int teamId);
-        Task<Topic> FindTopicAsync(int topicId);
-        Task<User> FindUserAsync(int userId);
-        Task<List<Driver>> GetDriversAsync();
-        Task<PostsPaginado> GetPostsConversationAsync(int posicion, int conversationId);
-        Task<List<Race>> GetRacesAsync();
-        Task<List<Post>> GetReportedPosts();
-        Task<List<Team>> GetTeamsAsync();
-        Task<ConversationsPaginado> GetVConversationsTopicAsync(int posicion, int topicId);
         Task<List<VTopic>> GetVTopicsAsync();
-        Task ReportPostAsync(int postId);
-        Task UpdateConversationAsync(Conversation conversacion);
-        Task UpdateDriverAsync(Driver conductor);
-        Task UpdateEntryCount(int conversationId);
-        Task UpdatePostAsync(Post posteo);
-        Task UpdateRaceAsync(Race carrera);
-        Task UpdateTeamAsync(Team equipo);
+        Task<Topic> FindTopicAsync(int topicId);
+        Task CreateTopicAsync(Topic tema);
         Task UpdateTopicAsync(Topic tema);
+        Task DeleteTopicAsync(int topicId);
+
+
+        Task<ConversationsPaginado> GetVConversationsTopicAsync(int posicion, int topicId);
+        Task<Conversation> FindConversationAsync(int conversationId);
+        Task<Conversation> CreateConversationAsync(Conversation conversacion);
+        Task UpdateConversationAsync(Conversation conversacion);
+        Task DeleteConversationAsync(int conversationId);
+        Task UpdateEntryCount(int conversationId);
+
+
+        Task<PostsPaginado> GetPostsConversationAsync(int posicion, int conversationId);
+        Task<Post> FindPostAsync(int postId);
+        Task CreatePostAsync(Post posteo);
+        Task UpdatePostAsync(Post posteo);
+        Task DeletePostAsync(int postId);
+        Task<List<Post>> GetReportedPosts();
+        Task ReportPostAsync(int postId);
+        Task UnreportPostAsync(int postId);
+
+
+        Task<List<Driver>> GetDriversAsync();
+        Task<Driver> FindDriverAsync(int driverId);
+        Task CreateDriverAsync(Driver conductor);
+        Task UpdateDriverAsync(Driver conductor);
+        Task DeleteDriverAsync(int driverId);
+
+
+        Task<List<Team>> GetTeamsAsync();
+        Task<Team> FindTeamAsync(int teamId);
+        Task CreateTeamAsync(Team equipo);
+        Task UpdateTeamAsync(Team equipo);
+        Task DeleteTeamAsync(int teamId);
+
+
+        Task<List<Race>> GetRacesAsync();
+        Task<Race> FindRaceAsync(int raceId);
+        Task CreateRaceAsync(Race carrera);
+        Task UpdateRaceAsync(Race carrera);
+        Task DeleteRaceAsync(int raceId);
+
+
+        Task<User> FindUserAsync(int userId);
         Task UpdateUserAsync(User user);
+        
     }
 }
