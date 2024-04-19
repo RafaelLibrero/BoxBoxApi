@@ -9,60 +9,60 @@ namespace BoxBoxApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class DriversController : ControllerBase
+    public class RacesController : ControllerBase
     {
         private RepositoryBoxBox repo;
 
-        public DriversController(RepositoryBoxBox repo)
+        public RacesController(RepositoryBoxBox repo)
         {
             this.repo = repo;
         }
 
-        // GET api/drivers
+        // GET api/races
         /// <summary>
-        /// Obtiene el conjunto de Drivers, tabla Drivers.
+        /// Obtiene el conjunto de Races, tabla Races.
         /// </summary>
         /// <remarks>
-        /// Método para devolver todos los Drivers de la BBDD
+        /// Método para devolver todos las Races de la BBDD
         /// </remarks>
         /// <response code="200">OK. Devuelve el objeto solicitado.</response>
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<List<Driver>>> Get()
+        public async Task<ActionResult<List<Race>>> Get()
         {
-            return await this.repo.GetDriversAsync();
+            return await this.repo.GetRacesAsync();
         }
 
-        // GET api/drivers/{id}
+        // GET api/races/{id}
         /// <summary>
-        /// Obtiene un Driver por su Id, tabla Drivers.
+        /// Obtiene una Race por su Id, tabla Race.
         /// </summary>
         /// <remarks>
-        /// Permite buscar un objeto Driver por su ID
+        /// Permite buscar un objeto Race por su ID
         /// </remarks>
-        /// <param name="id">Id (GUID) del objeto Driver.</param>
+        /// <param name="id">Id (GUID) del objeto Race.</param>
         /// <response code="200">OK. Devuelve el objeto solicitado.</response>        
         /// <response code="404">NotFound. No se ha encontrado el objeto solicitado.</response> 
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<Driver>> Get(int id)
+        public async Task<ActionResult<Race>> Get(int id)
         {
-            Driver driver = await this.repo.FindDriverAsync(id);
-            if (driver == null)
+            Race race = await this.repo.FindRaceAsync(id);
+            if (race == null)
             {
                 return NotFound();
             }
-            return driver;
+            return race;
         }
 
-        // POST api/drivers
+        // POST api/races
         /// <summary>
-        /// Crea un nuevo Driver en la BBDD, tabla Drivers
+        /// Crea una nueva Race en la BBDD, tabla Races
         /// </summary>
         /// <remarks>
-        /// Este método inserta un nuevo Driver enviando el Objeto JSON
-        /// El ID del driver se genera automáticamente dentro del método
+        /// Este método inserta una nueva Race enviando el Objeto JSON
+        /// El ID de la Race se genera automáticamente dentro del método
         /// </remarks>
         /// <response code="201">Created. Objeto correctamente creado en la BD.</response>        
         /// <response code="500">BBDD. No se ha creado el objeto en la BD. Error en la BBDD.</response>/// 
@@ -70,15 +70,15 @@ namespace BoxBoxApi.Controllers
         [Authorize]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult> Post(Driver driver)
+        public async Task<ActionResult> Post(Race race)
         {
-            await this.repo.CreateDriverAsync(driver);
-
+            await this.repo.CreateRaceAsync(race);
             return Ok();
         }
-        // PUT api/drivers
+
+        // PUT api/races
         /// <summary>
-        /// Modifica un Driver en la BBDD mediante su ID, tabla Drivers
+        /// Modifica una Race en la BBDD mediante su ID, tabla Races
         /// </summary>
         /// <response code="201">Created. Objeto correctamente creado en la BD.</response>        
         /// <response code="404">NotFound. No se ha encontrado el objeto solicitado.</response>
@@ -88,26 +88,26 @@ namespace BoxBoxApi.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult> Put(Driver driver)
+        public async Task<ActionResult> Put(Race race)
         {
-            var id = await this.repo.FindDriverAsync(driver.DriverID);
+            var id = await this.repo.FindRaceAsync(race.RaceId);
 
             if (id == null)
             {
                 return NotFound();
             }
-            await this.repo.UpdateDriverAsync(driver);
+            await this.repo.UpdateRaceAsync(race);
             return Ok();
         }
 
-        // DELETE api/drivers/{id}
+        // DELETE api/races/{id}
         /// <summary>
-        /// Elimina un Driver en la BBDD mediante su ID. Tabla Drivers
+        /// Elimina una Race en la BBDD mediante su ID. Tabla Races
         /// </summary>
         /// <remarks>
         /// Enviaremos el ID mediante la URL
         /// </remarks>
-        /// <param name="id">ID del Driver a eliminar</param>
+        /// <param name="id">ID de la Race a eliminar</param>
         /// <response code="201">Deleted. Objeto eliminado en la BBDD.</response> 
         /// <response code="404">NotFound. No se ha encontrado el objeto solicitado.</response>    
         /// <response code="500">BBDD. No se ha eliminado el objeto en la BD. Error en la BBDD.</response>/// 
@@ -118,12 +118,12 @@ namespace BoxBoxApi.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult> Delete(int id)
         {
-            Driver driver = await this.repo.FindDriverAsync(id);
-            if (driver == null)
+            Race race = await this.repo.FindRaceAsync(id);
+            if (race == null)
             {
                 return NotFound();
             }
-            await this.repo.DeleteDriverAsync(id);
+            await this.repo.DeleteRaceAsync(id);
             return Ok();
         }
     }
