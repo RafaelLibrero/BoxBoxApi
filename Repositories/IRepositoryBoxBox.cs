@@ -4,6 +4,14 @@ namespace BoxBoxApi.Repositories
 {
     public interface IRepositoryBoxBox
     {
+        Task<User> Register(string userName, string email, string password);
+        Task<User> LoginUserAsync(string email, string password);
+        Task<List<User>> GetUsersAsync();
+        Task<User> FindUserAsync(int userId);
+        Task UpdateUserAsync(User user);
+        Task DeleteUserAsync(int userId);
+
+
         Task<List<VTopic>> GetVTopicsAsync();
         Task<Topic> FindTopicAsync(int topicId);
         Task CreateTopicAsync(Topic tema);
@@ -48,10 +56,6 @@ namespace BoxBoxApi.Repositories
         Task CreateRaceAsync(Race carrera);
         Task UpdateRaceAsync(Race carrera);
         Task DeleteRaceAsync(int raceId);
-
-
-        Task<User> FindUserAsync(int userId);
-        Task UpdateUserAsync(User user);
         
     }
 }

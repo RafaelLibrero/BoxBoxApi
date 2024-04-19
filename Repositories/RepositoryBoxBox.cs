@@ -1,4 +1,5 @@
 ﻿using BoxBoxApi.Data;
+using BoxBoxApi.Helpers;
 using BoxBoxModels;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +15,105 @@ namespace BoxBoxApi.Repositories
         {
             this.context = context;
         }
+
+        #region Users
+
+        private async Task<int> GetMaxUserId()
+        {
+            if (this.context.Users.Count() == 0)
+            {
+                return 1;
+            }
+            else
+            {
+                return await this.context.Users.MaxAsync(x => x.UserId) + 1;
+            }
+        }
+
+        public async Task<User> Register(string userName, string email, string password)
+        {
+            User user = new User();
+            user.UserId = await this.GetMaxUserId();
+            user.UserName = userName;
+            user.Email = email.ToLower();
+            user.Salt = HelperTools.GenerateSalt();
+            user.Password = HelperCryptography.EncryptPassword(password, user.Salt);
+            user.RegistrationDate = DateTime.Today;
+            user.LastAccess = DateTime.UtcNow;
+            user.RolId = 2;
+            user.ProfilePicture = "";
+            user.DriverId = null;
+            user.TeamId = null;
+
+            this.context.Users.Add(user);
+            await this.context.SaveChangesAsync();
+
+            return user;
+        }
+
+        public async Task<User> LoginUserAsync(string email, string password)
+        {
+            User user = await
+                this.context.Users.FirstOrDefaultAsync(x => x.Email == email);
+
+            if (user == null)
+            {
+                return null;
+            }
+            else
+            {
+                string salt = user.Salt;
+                byte[] temp =
+                    HelperCryptography.EncryptPassword(password, salt);
+                byte[] passUser = user.Password;
+                bool response =
+                    HelperTools.CompareArrays(temp, passUser);
+                if (response == true)
+                {
+                    user.LastAccess = DateTime.UtcNow;
+                    await this.context.SaveChangesAsync();
+                    return user;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
+        public async Task<List<User>> GetUsersAsync()
+        {
+            return await
+                this.context.Users.ToListAsync();
+        }
+
+        public async Task<User> FindUserAsync(int userId)
+        {
+            return await
+                this.context.Users.FirstOrDefaultAsync
+                (x => x.UserId == userId);
+        }
+
+        public async Task UpdateUserAsync(User user)
+        {
+            User usuario = await this.FindUserAsync(user.UserId);
+            usuario.UserName = user.UserName;
+            usuario.ProfilePicture = user.ProfilePicture;
+            usuario.TeamId = user.TeamId;
+            usuario.DriverId = user.DriverId;
+
+            await this.context.SaveChangesAsync();
+        }
+
+        public async Task DeleteUserAsync(int id)
+        {
+            User user = await this.FindUserAsync(id);
+
+            this.context.Users.Remove(user);
+            await this.context.SaveChangesAsync();
+        }
+
+        #endregion
 
         #region Topics
 
@@ -495,26 +595,5 @@ namespace BoxBoxApi.Repositories
 
         #endregion
 
-        #region Users
-
-        public async Task<User> FindUserAsync(int userId)
-        {
-            return await
-                this.context.Users.FirstOrDefaultAsync
-                (x => x.UserId == userId);
-        }
-
-        public async Task UpdateUserAsync(User user)
-        {
-            User usuario = await this.FindUserAsync(user.UserId);
-            usuario.UserName = user.UserName;
-            usuario.ProfilePicture = user.ProfilePicture;
-            usuario.TeamId = user.TeamId;
-            usuario.DriverId = user.DriverId;
-
-            await this.context.SaveChangesAsync();
-        }
-
-        #endregion
     }
 }
