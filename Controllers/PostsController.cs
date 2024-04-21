@@ -16,7 +16,7 @@ namespace BoxBoxApi.Controllers
             this.repo = repo;
         }
 
-        // GET api/posts/{posicion}/{conversationId}
+        // GET api/posts/get/{posicion}/{conversationId}
         /// <summary>
         /// Obtiene el conjunto de Posts por su posicion y Conversation, Tabla Posts.
         /// </summary>
@@ -151,7 +151,7 @@ namespace BoxBoxApi.Controllers
         /// <response code="404">NotFound. No se ha encontrado el objeto solicitado.</response>
         /// <response code="500">BBDD. No se ha creado el objeto en la BD. Error en la BBDD.</response>/// 
         [HttpPut]
-        [Route("[action]")]
+        [Route("[action]/{idpost}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -176,7 +176,7 @@ namespace BoxBoxApi.Controllers
         /// <response code="404">NotFound. No se ha encontrado el objeto solicitado.</response>
         /// <response code="500">BBDD. No se ha creado el objeto en la BD. Error en la BBDD.</response>/// 
         [HttpPut]
-        [Route("[action]")]
+        [Route("[action]/{idpost}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

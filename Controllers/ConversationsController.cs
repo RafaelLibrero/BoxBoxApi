@@ -17,7 +17,7 @@ namespace BoxBoxApi.Controllers
             this.repo = repo;
         }
 
-        // GET api/conversations/{posicion}/{topicId}
+        // GET api/conversations/get/{posicion}/{topicId}
         /// <summary>
         /// Obtiene el conjunto de VConversations por su posicion y Topic, view V_Conversations.
         /// </summary>

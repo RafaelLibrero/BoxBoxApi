@@ -69,7 +69,6 @@ namespace BoxBoxApi.Controllers
                     {
                         response =
                         new JwtSecurityTokenHandler().WriteToken(token),
-                        user
                     });
             }
         }

@@ -3,6 +3,8 @@ using BoxBoxModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using System.Security.Claims;
 
 namespace BoxBoxApi.Controllers
 {
@@ -130,5 +132,29 @@ namespace BoxBoxApi.Controllers
             await this.repo.DeleteUserAsync(id);
             return Ok();
         }
+
+        // GET: api/usuarios/perfilusuario
+        /// <summary>
+        /// Obtiene un User a partir de su TOKEN, tabla Users.
+        /// </summary>
+        /// <remarks>
+        /// </remarks>
+        /// <response code="200">OK. Devuelve el objeto solicitado.</response>        
+        /// <response code="404">NotFound. No se ha encontrado el objeto solicitado.</response>        
+        /// <response code="401">NotAuthorized. No autorizado, sin Token válido.</response>         
+        [Authorize]
+        [HttpGet]
+        [Route("[action]")]
+        public async Task<User> Profile()
+        {
+            Claim claimUser = HttpContext.User.Claims
+                .SingleOrDefault(x => x.Type == "UserData");
+            string jsonUser = claimUser.Value;
+            User user = JsonConvert.DeserializeObject<User>(jsonUser);
+            int idUser = user.UserId;
+            User userValid = await this.repo.FindUserAsync(idUser);
+            return userValid;
+        }
+
     }
 }
