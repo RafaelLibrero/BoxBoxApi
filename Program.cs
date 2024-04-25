@@ -1,7 +1,9 @@
+using Azure.Security.KeyVault.Secrets;
 using BoxBoxApi.Data;
 using BoxBoxApi.Helpers;
 using BoxBoxApi.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Azure;
 using NSwag;
 using NSwag.Generation.Processors.Security;
 
@@ -13,9 +15,18 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddTransient<RepositoryBoxBox>();
 
-string connectionString = builder.Configuration.GetConnectionString("SqlAzure");
+builder.Services.AddAzureClients(factory =>
+{
+    factory.AddSecretClient
+    (builder.Configuration.GetSection("KeyVault"));
+});
+
+SecretClient secretClient =
+builder.Services.BuildServiceProvider().GetService<SecretClient>();
+KeyVaultSecret secret =
+    await secretClient.GetSecretAsync("SqlAzure");
 builder.Services.AddDbContext<BoxBoxContext>
-    (options => options.UseSqlServer(connectionString));
+    (options => options.UseSqlServer(secret.Value));
 
 builder.Services.AddEndpointsApiExplorer();
 
