@@ -1,4 +1,5 @@
-﻿using BoxBoxApi.Repositories;
+﻿using Azure.Security.KeyVault.Secrets;
+using BoxBoxApi.Repositories;
 using BoxBoxModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,10 +13,15 @@ namespace BoxBoxApi.Controllers
     public class DriversController : ControllerBase
     {
         private RepositoryBoxBox repo;
+        private SecretClient secretClient;
+        private KeyVaultSecret imagesContainer;
 
-        public DriversController(RepositoryBoxBox repo)
+        public DriversController(RepositoryBoxBox repo, SecretClient secretClient)
         {
             this.repo = repo;
+            this.secretClient = secretClient;
+            this.imagesContainer =
+                this.secretClient.GetSecret("ImagesContainer");
         }
 
         // GET api/drivers
@@ -30,7 +36,13 @@ namespace BoxBoxApi.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<List<Driver>>> Get()
         {
-            return await this.repo.GetDriversAsync();
+            List<Driver> drivers = await this.repo.GetDriversAsync();
+            foreach(Driver driver in drivers)
+            {
+                driver.Flag = this.imagesContainer.Value + "/" + driver.Flag;
+                driver.Imagen = this.imagesContainer.Value + "/" + driver.Imagen;
+            }
+            return drivers;
         }
 
         // GET api/drivers/{id}
@@ -53,6 +65,8 @@ namespace BoxBoxApi.Controllers
             {
                 return NotFound();
             }
+            driver.Flag = this.imagesContainer.Value + "/" + driver.Flag;
+            driver.Imagen = this.imagesContainer.Value + "/" + driver.Imagen;
             return driver;
         }
 

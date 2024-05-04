@@ -1,4 +1,5 @@
-﻿using BoxBoxApi.Repositories;
+﻿using Azure.Security.KeyVault.Secrets;
+using BoxBoxApi.Repositories;
 using BoxBoxModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -13,10 +14,15 @@ namespace BoxBoxApi.Controllers
     public class UsersController : ControllerBase
     {
         private RepositoryBoxBox repo;
+        private SecretClient secretClient;
+        private KeyVaultSecret imagesContainer;
 
-        public UsersController(RepositoryBoxBox repo)
+        public UsersController(RepositoryBoxBox repo, SecretClient secretClient)
         {
             this.repo = repo;
+            this.secretClient = secretClient;
+            this.imagesContainer =
+                this.secretClient.GetSecret("ImagesContainer");
         }
 
         // GET: api/users
@@ -32,6 +38,11 @@ namespace BoxBoxApi.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<List<User>>> Get()
         {
+            List<User> users = await this.repo.GetUsersAsync();
+            foreach(User user in users) 
+            {
+                user.ProfilePicture = this.imagesContainer.Value + "/" + user.ProfilePicture;
+            }
             return await this.repo.GetUsersAsync();
         }
 
@@ -56,6 +67,7 @@ namespace BoxBoxApi.Controllers
             {
                 return NotFound();
             }
+            user.ProfilePicture = this.imagesContainer.Value + "/" + user.ProfilePicture;
             return user;
         }
 

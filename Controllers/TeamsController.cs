@@ -1,4 +1,5 @@
-﻿using BoxBoxApi.Repositories;
+﻿using Azure.Security.KeyVault.Secrets;
+using BoxBoxApi.Repositories;
 using BoxBoxModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -11,10 +12,15 @@ namespace BoxBoxApi.Controllers
     public class TeamsController : ControllerBase
     {
         private RepositoryBoxBox repo;
+        private SecretClient secretClient;
+        private KeyVaultSecret imagesContainer;
 
-        public TeamsController(RepositoryBoxBox repo)
+        public TeamsController(RepositoryBoxBox repo, SecretClient secretClient)
         {
             this.repo = repo;
+            this.secretClient = secretClient;
+            this.imagesContainer =
+                this.secretClient.GetSecret("ImagesContainer");
         }
 
         // GET api/teams
@@ -29,7 +35,12 @@ namespace BoxBoxApi.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<List<Team>>> Get()
         {
-            return await this.repo.GetTeamsAsync();
+            List<Team> teams = await this.repo.GetTeamsAsync();
+            foreach (Team team in teams)
+            {
+                team.Logo = this.imagesContainer.Value + "/" + team.Logo;
+            }
+            return teams;
         }
 
         // GET api/teams/{id}
@@ -52,6 +63,7 @@ namespace BoxBoxApi.Controllers
             {
                 return NotFound();
             }
+            team.Logo = this.imagesContainer.Value + "/" + team.Logo;
             return team;
         }
 

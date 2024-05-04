@@ -58,8 +58,8 @@ namespace BoxBoxApi.Controllers
                 JwtSecurityToken token =
                     new JwtSecurityToken(
                         claims: infoUser,
-                        issuer: this.helper.Issuer,
-                        audience: this.helper.Audience,
+                        issuer: this.helper.Issuer.Value,
+                        audience: this.helper.Audience.Value,
                         signingCredentials: credentials,
                         expires: DateTime.UtcNow.AddMinutes(30),
                         notBefore: DateTime.UtcNow

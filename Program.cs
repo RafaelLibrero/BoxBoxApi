@@ -9,9 +9,6 @@ using NSwag.Generation.Processors.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
-builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddTransient<RepositoryBoxBox>();
 
@@ -48,7 +45,7 @@ builder.Services.AddOpenApiDocument(document =>
 });
 
 
-HelperToken helper = new HelperToken(builder.Configuration);
+HelperToken helper = new HelperToken(secretClient);
 builder.Services.AddAuthentication(helper.GetAuthenticateSchema())
     .AddJwtBearer(helper.GetJwtBearerOptions());
 builder.Services.AddTransient<HelperToken>(x => helper);

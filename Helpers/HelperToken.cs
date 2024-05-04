@@ -2,30 +2,33 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Azure.Security.KeyVault.Secrets;
 
 namespace BoxBoxApi.Helpers
 {
     public class HelperToken
     {
-        public string Issuer { get; set; }
-        public string Audience { get; set; }
-        public string SecretKey { get; set; }
+        private SecretClient secretClient;
+        public KeyVaultSecret Issuer { get; set; }
+        public KeyVaultSecret Audience { get; set; }
+        public KeyVaultSecret SecretKey { get; set; }
 
-        public HelperToken(IConfiguration configuration)
+        public HelperToken(SecretClient secretClient)
         {
+            this.secretClient = secretClient;
             this.Issuer =
-                configuration.GetValue<string>("ApiOAuth:Issuer");
+                this.secretClient.GetSecret("Issuer");
             this.Audience =
-                configuration.GetValue<string>("ApiOAuth:Audience");
+                this.secretClient.GetSecret("Audience");
             this.SecretKey =
-                configuration.GetValue<string>("ApiOAuth:SecretKey");
+                this.secretClient.GetSecret("SecretKey");
         }
 
         public SymmetricSecurityKey GetKeyToken()
         {
             //CONVERTIMOS EL SECRET KEY A BYTES[]
             byte[] data =
-                Encoding.UTF8.GetBytes(this.SecretKey);
+                Encoding.UTF8.GetBytes(this.SecretKey.Value);
             //DEVOLVEMOS LA KEY GENERADA MEDIANTE LOS bytes[]
             return new SymmetricSecurityKey(data);
         }
@@ -42,8 +45,8 @@ namespace BoxBoxApi.Helpers
                         ValidateAudience = true,
                         ValidateLifetime = true,
                         ValidateIssuerSigningKey = true,
-                        ValidIssuer = this.Issuer,
-                        ValidAudience = this.Audience,
+                        ValidIssuer = this.Issuer.Value,
+                        ValidAudience = this.Audience.Value,
                         IssuerSigningKey = this.GetKeyToken()
                     };
                 });

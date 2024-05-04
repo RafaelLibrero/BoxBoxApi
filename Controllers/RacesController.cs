@@ -1,4 +1,5 @@
-﻿using BoxBoxApi.Repositories;
+﻿using Azure.Security.KeyVault.Secrets;
+using BoxBoxApi.Repositories;
 using BoxBoxModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,10 +13,15 @@ namespace BoxBoxApi.Controllers
     public class RacesController : ControllerBase
     {
         private RepositoryBoxBox repo;
+        private SecretClient secretClient;
+        private KeyVaultSecret imagesContainer;
 
-        public RacesController(RepositoryBoxBox repo)
+        public RacesController(RepositoryBoxBox repo, SecretClient secretClient)
         {
             this.repo = repo;
+            this.secretClient = secretClient;
+            this.imagesContainer =
+                this.secretClient.GetSecret("ImagesContainer");
         }
 
         // GET api/races
@@ -30,7 +36,12 @@ namespace BoxBoxApi.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<List<Race>>> Get()
         {
-            return await this.repo.GetRacesAsync();
+            List<Race> races = await this.repo.GetRacesAsync();
+            foreach (Race race in races)
+            {
+                race.Image = this.imagesContainer.Value + "/" + race.Image;
+            }
+            return races;
         }
 
         // GET api/races/{id}
@@ -53,6 +64,7 @@ namespace BoxBoxApi.Controllers
             {
                 return NotFound();
             }
+            race.Image = this.imagesContainer.Value + "/" + race.Image;
             return race;
         }
 
