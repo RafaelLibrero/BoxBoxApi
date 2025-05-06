@@ -51,10 +51,10 @@ namespace BoxBoxApi.Repositories
             return user;
         }
 
-        public async Task<User> LoginUserAsync(string email, string password)
+        public async Task<User> LoginUserAsync(LoginModel loginUser)
         {
             User user = await
-                this.context.Users.FirstOrDefaultAsync(x => x.Email == email);
+                this.context.Users.FirstOrDefaultAsync(x => x.Email == loginUser.Email);
 
             if (user == null)
             {
@@ -64,7 +64,7 @@ namespace BoxBoxApi.Repositories
             {
                 string salt = user.Salt;
                 byte[] temp =
-                    HelperCryptography.EncryptPassword(password, salt);
+                    HelperCryptography.EncryptPassword(loginUser.Password, salt);
                 byte[] passUser = user.Password;
                 bool response =
                     HelperTools.CompareArrays(temp, passUser);

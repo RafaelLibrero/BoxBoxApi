@@ -37,10 +37,10 @@ namespace BoxBoxApi.Controllers
         /// <response code="401">NotAuthorized. No autorizado, sin Token válido.</response>         
         [HttpPost]
         [Route("[action]")]
-        public async Task<ActionResult> Login(string email, string password)
+        public async Task<ActionResult> Login(LoginModel loginUser)
         {
             User user = await
-                this.repo.LoginUserAsync(email, password);
+                this.repo.LoginUserAsync(loginUser);
             if (user == null)
             {
                 return Unauthorized();
