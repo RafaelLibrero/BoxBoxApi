@@ -19,6 +19,8 @@ namespace BoxBoxModels
         public string Flag { get; set; }
         [Column("Imagen")]
         public string Imagen { get; set; }
+        [Column("Points")]
+        public int Points { get; set; }
 
     }
 }

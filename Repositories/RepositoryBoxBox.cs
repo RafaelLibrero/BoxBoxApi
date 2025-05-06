@@ -413,8 +413,9 @@ namespace BoxBoxApi.Repositories
         #region Drivers
         public async Task<List<Driver>> GetDriversAsync()
         {
-            return await
-                this.context.Drivers.ToListAsync();
+            return await this.context.Drivers
+                .OrderByDescending(driver => driver.Points)
+                .ToListAsync();
         }
 
         public async Task<Driver> FindDriverAsync(int driverId)
@@ -477,8 +478,9 @@ namespace BoxBoxApi.Repositories
 
         public async Task<List<Team>> GetTeamsAsync()
         {
-            return await
-                this.context.Teams.ToListAsync();
+            return await this.context.Teams
+                .OrderByDescending(team => team.Points)
+                .ToListAsync();
         }
 
         public async Task<Team> FindTeamAsync(int teamId)
