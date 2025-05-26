@@ -85,7 +85,6 @@ namespace BoxBoxApi.Controllers
         /// <response code="201">Created. Objeto correctamente creado en la BD.</response>        
         /// <response code="500">BBDD. No se ha creado el objeto en la BD. Error en la BBDD.</response>/// 
         [HttpPost]
-        [Authorize]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<User>> Post(string username, string email, string password)
