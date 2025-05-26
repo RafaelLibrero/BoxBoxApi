@@ -15,8 +15,8 @@ namespace BoxBoxModels
         public string? Image { get; set; }
         [Column("Location")]
         public string? Location { get; set; }
-        [Column("StartDate")]
-        public DateTime? StartDate { get; set; }
+        [NotMapped]
+        public DateTime? StartDate => EndDate?.AddDays(-2);
         [Column("EndDate")]
         public DateTime? EndDate { get; set; }
         [Column("WinnerDriverID")]

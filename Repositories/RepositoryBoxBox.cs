@@ -568,7 +568,6 @@ namespace BoxBoxApi.Repositories
             race.RaceName = carrera.RaceName;
             race.Image = carrera.Image;
             race.Location = carrera.Location;
-            race.StartDate = carrera.StartDate;
             race.EndDate = carrera.EndDate;
 
             this.context.Races.Add(race);
@@ -581,7 +580,6 @@ namespace BoxBoxApi.Repositories
             race.RaceName = carrera.RaceName;
             race.Image = carrera.Image;
             race.Location = carrera.Location;
-            race.StartDate = carrera.StartDate;
             race.EndDate = carrera.EndDate;
 
             await this.context.SaveChangesAsync();
