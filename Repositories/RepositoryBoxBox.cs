@@ -1,4 +1,5 @@
 ﻿using BoxBoxApi.Data;
+using BoxBoxApi.DTOs;
 using BoxBoxApi.Helpers;
 using BoxBoxModels;
 using Microsoft.Data.SqlClient;
@@ -352,13 +353,13 @@ namespace BoxBoxApi.Repositories
             }
         }
 
-        public async Task CreatePostAsync(Post posteo)
+        public async Task CreatePostAsync(CreatePostDto dto)
         {
             Post post = new Post();
             post.PostId = await this.GetMaxPostId();
-            post.ConversationId = posteo.ConversationId;
-            post.UserId = posteo.UserId;
-            post.Text = posteo.Text;
+            post.ConversationId = dto.ConversationId;
+            post.UserId = dto.UserId;
+            post.Text = dto.Text;
             post.CreatedAt = DateTime.UtcNow;
             post.Estado = 0;
 

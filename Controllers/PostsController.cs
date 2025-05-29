@@ -1,4 +1,5 @@
-﻿using BoxBoxApi.Repositories;
+﻿using BoxBoxApi.DTOs;
+using BoxBoxApi.Repositories;
 using BoxBoxModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -71,7 +72,7 @@ namespace BoxBoxApi.Controllers
         [Authorize]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult> Post(Post post)
+        public async Task<ActionResult> Post(CreatePostDto post)
         {
             await this.repo.CreatePostAsync(post);
 
