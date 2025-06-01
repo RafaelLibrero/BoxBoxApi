@@ -164,6 +164,7 @@ namespace BoxBoxApi.Controllers
             User user = JsonConvert.DeserializeObject<User>(jsonUser);
             int idUser = user.UserId;
             User userValid = await this.repo.FindUserAsync(idUser);
+            userValid.ProfilePicture = this.imagesContainer.Value + "/" + userValid.ProfilePicture;
             return userValid;
         }
 
