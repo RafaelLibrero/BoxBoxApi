@@ -45,6 +45,7 @@ namespace BoxBoxApi.Repositories
             user.ProfilePicture = "";
             user.DriverId = null;
             user.TeamId = null;
+            user.Biography = null;
 
             this.context.Users.Add(user);
             await this.context.SaveChangesAsync();
@@ -102,6 +103,7 @@ namespace BoxBoxApi.Repositories
             usuario.ProfilePicture = user.ProfilePicture;
             usuario.TeamId = user.TeamId;
             usuario.DriverId = user.DriverId;
+            usuario.Biography = user.Biography;
 
             await this.context.SaveChangesAsync();
         }

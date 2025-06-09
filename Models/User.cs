@@ -15,7 +15,7 @@ namespace BoxBoxModels
         public string UserName { get; set; }
         [EmailAddress]
         [Column("Email")]
-        public string Email { get; set; }
+        public string? Email { get; set; }
         [Column("Password")]
         public byte[] Password { get; set; }
         [Column("RegistrationDate")]
@@ -34,6 +34,8 @@ namespace BoxBoxModels
         public int? DriverId { get; set; }
         [Column("Salt")]
         public string Salt { get; set; }
+        [Column("Biography")]
+        public string? Biography { get; set; }
 
     }
 }

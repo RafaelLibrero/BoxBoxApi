@@ -1,8 +1,8 @@
 ﻿using Azure.Security.KeyVault.Secrets;
+using BoxBoxApi.DTOs;
 using BoxBoxApi.Repositories;
 using BoxBoxModels;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System.Security.Claims;
@@ -36,14 +36,25 @@ namespace BoxBoxApi.Controllers
         [HttpGet]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<List<User>>> Get()
+        public async Task<ActionResult<List<UserProfileDto>>> Get()
         {
-            List<User> users = await this.repo.GetUsersAsync();
-            foreach(User user in users) 
+            var users = await this.repo.GetUsersAsync();
+
+            var userDtos = users.Select(user => new UserProfileDto
             {
-                user.ProfilePicture = this.imagesContainer.Value + "/" + user.ProfilePicture;
-            }
-            return await this.repo.GetUsersAsync();
+                UserId = user.UserId,
+                UserName = user.UserName,
+                Email = null, // No se expone en la lista pública
+                ProfilePicture = this.imagesContainer.Value + "/" + user.ProfilePicture,
+                TotalPosts = user.TotalPosts,
+                TeamId = user.TeamId,
+                DriverId = user.DriverId,
+                RegistrationDate = user.RegistrationDate,
+                LastAccess = user.LastAccess,
+                Biography = user.Biography
+            }).ToList();
+
+            return Ok(userDtos);
         }
 
         // GET api/users/{id}
@@ -59,31 +70,53 @@ namespace BoxBoxApi.Controllers
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<User>> Get(int id)
+        public async Task<ActionResult<UserProfileDto>> Get(int id)
         {
             User user = await this.repo.FindUserAsync(id);
-            if (user == null)
+            if (user == null) return NotFound();
+
+            int? currentUserId = null;
+
+            if (User.Identity.IsAuthenticated)
             {
-                return NotFound();
+                var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (claim != null)
+                {
+                    currentUserId = int.Parse(claim.Value);
+                }
             }
-            user.ProfilePicture = this.imagesContainer.Value + "/" + user.ProfilePicture;
-            return user;
+
+            var userProfile = new UserProfileDto
+            {
+                UserId = user.UserId,
+                UserName = user.UserName,
+                Email = (user.UserId == currentUserId) ? user.Email : null,
+                ProfilePicture = this.imagesContainer.Value + "/" + user.ProfilePicture,
+                TotalPosts = user.TotalPosts,
+                TeamId = user.TeamId,
+                DriverId = user.DriverId,
+                RegistrationDate = user.RegistrationDate,
+                LastAccess = user.LastAccess,
+                Biography = user.Biography
+            };
+
+            return Ok(userProfile);
         }
 
-        // POST api/users
-        /// <summary>
-        /// Crea un nuevo User en la BBDD, tabla Users
-        /// </summary>
-        /// <remarks>
-        /// Este método inserta un nuevo User enviando el Objeto JSON
-        /// El ID del user se genera automáticamente dentro del método
-        /// </remarks>
-        /// <param name="username">Nombre de usuario del User</param>
-        /// <param name="email">Email del User</param>
-        /// <param name="password">Contraseña del User</param>
-        /// <response code="201">Created. Objeto correctamente creado en la BD.</response>        
-        /// <response code="500">BBDD. No se ha creado el objeto en la BD. Error en la BBDD.</response>/// 
-        [HttpPost]
+            // POST api/users
+            /// <summary>
+            /// Crea un nuevo User en la BBDD, tabla Users
+            /// </summary>
+            /// <remarks>
+            /// Este método inserta un nuevo User enviando el Objeto JSON
+            /// El ID del user se genera automáticamente dentro del método
+            /// </remarks>
+            /// <param name="username">Nombre de usuario del User</param>
+            /// <param name="email">Email del User</param>
+            /// <param name="password">Contraseña del User</param>
+            /// <response code="201">Created. Objeto correctamente creado en la BD.</response>        
+            /// <response code="500">BBDD. No se ha creado el objeto en la BD. Error en la BBDD.</response>/// 
+            [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<User>> Post(string username, string email, string password)
@@ -104,14 +137,17 @@ namespace BoxBoxApi.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult> Put(User user)
+        public async Task<ActionResult> Put([FromBody] UserRequestDto dto)
         {
-            var id = await this.repo.FindUserAsync(user.UserId);
+            var user = await this.repo.FindUserAsync(dto.UserId);
+            if (user == null) return NotFound();
 
-            if (id == null)
-            {
-                return NotFound();
-            }
+            user.UserName = dto.UserName;
+            user.ProfilePicture = dto.ProfilePicture ?? user.ProfilePicture;
+            user.TeamId = dto.TeamId;
+            user.DriverId = dto.DriverId;
+            user.Biography = dto.Biography;
+
             await this.repo.UpdateUserAsync(user);
             return Ok();
         }
@@ -155,16 +191,33 @@ namespace BoxBoxApi.Controllers
         [Authorize]
         [HttpGet]
         [Route("[action]")]
-        public async Task<User> Profile()
+        public async Task<ActionResult<UserProfileDto>> Profile()
         {
+
             Claim claimUser = HttpContext.User.Claims
                 .SingleOrDefault(x => x.Type == "UserData");
             string jsonUser = claimUser.Value;
             User user = JsonConvert.DeserializeObject<User>(jsonUser);
             int idUser = user.UserId;
+
             User userValid = await this.repo.FindUserAsync(idUser);
-            userValid.ProfilePicture = this.imagesContainer.Value + "/" + userValid.ProfilePicture;
-            return userValid;
+            if (userValid == null) return NotFound();
+
+            var userProfile = new UserProfileDto
+            {
+                UserId = userValid.UserId,
+                UserName = userValid.UserName,
+                Email = userValid.Email,
+                ProfilePicture = this.imagesContainer.Value + "/" + userValid.ProfilePicture,
+                TotalPosts = userValid.TotalPosts,
+                TeamId = userValid.TeamId,
+                DriverId = userValid.DriverId,
+                RegistrationDate = userValid.RegistrationDate,
+                LastAccess = userValid.LastAccess,
+                Biography = userValid.Biography
+            };
+
+            return Ok(userProfile);
         }
 
     }
