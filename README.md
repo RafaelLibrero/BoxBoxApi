@@ -1,7 +1,20 @@
+<div align="center">
+
 # 📦 BoxBoxApi
 
-API RESTful desarrollada con **ASP.NET Core**, **Entity Framework Core** y **Swagger**, organizada en una arquitectura por capas: Controllers, Repositories, Models y DTOs. 
+API RESTful desarrollada con **ASP.NET Core**, **Entity Framework Core** y **Swagger**, organizada en una arquitectura por capas:  
+Controllers, Repositories, Models y DTOs.  
 La API está desplegada en **Azure App Service** y conectada a **Azure SQL Database**, con el manejo de secretos mediante **Key Vault**
+
+<img src="https://img.shields.io/badge/.NET-7.0-blueviolet?style=for-the-badge&logo=dotnet&logoColor=white"/>
+<img src="https://img.shields.io/badge/C%23-%23239120.svg?style=for-the-badge&logo=c-sharp&logoColor=white"/>
+<img src="https://img.shields.io/badge/MVC-Architecture-green?style=for-the-badge"/>
+<img src="https://img.shields.io/badge/REST%20API-Implemented-brightgreen?style=for-the-badge"/>
+<img src="https://img.shields.io/badge/Entity%20Framework-Core-blue?style=for-the-badge"/>
+<img src="https://img.shields.io/badge/Swagger-UI-orange?style=for-the-badge&logo=swagger&logoColor=white"/>
+<img src="https://img.shields.io/github/license/rafaellibrero/boxboxapi?style=for-the-badge"/>
+
+</div>
 
 ---
 
