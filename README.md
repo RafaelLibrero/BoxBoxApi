@@ -7,7 +7,7 @@ La API está desplegada en **Azure App Service** y conectada a **Azure SQL Datab
 
 ## 📚 Tecnologías utilizadas
 
-- [.NET 8](https://dotnet.microsoft.com/)
+- [.NET 7](https://dotnet.microsoft.com/)
 - [ASP.NET Core Web API](https://learn.microsoft.com/aspnet/core/web-api/)
 - [Entity Framework Core](https://learn.microsoft.com/ef/core/)
 - [Swagger / Swashbuckle](https://github.com/domaindrivendev/Swashbuckle.AspNetCore)
