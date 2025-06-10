@@ -4,24 +4,21 @@ using BoxBoxModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-
 namespace BoxBoxApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class DriversController : ControllerBase
     {
-        private RepositoryBoxBox repo;
-        private SecretClient secretClient;
-        private KeyVaultSecret imagesContainer;
+        private readonly RepositoryBoxBox repo;
+        private readonly SecretClient secretClient;
+        private readonly KeyVaultSecret imagesContainer;
 
         public DriversController(RepositoryBoxBox repo, SecretClient secretClient)
         {
             this.repo = repo;
             this.secretClient = secretClient;
-            this.imagesContainer =
-                this.secretClient.GetSecret("ImagesContainer");
+            this.imagesContainer = this.secretClient.GetSecret("ImagesContainer");
         }
 
         // GET api/drivers
@@ -37,10 +34,10 @@ namespace BoxBoxApi.Controllers
         public async Task<ActionResult<List<Driver>>> Get()
         {
             List<Driver> drivers = await this.repo.GetDriversAsync();
-            foreach(Driver driver in drivers)
+            foreach (Driver driver in drivers)
             {
-                driver.Flag = this.imagesContainer.Value + "/" + driver.Flag;
-                driver.Imagen = this.imagesContainer.Value + "/" + driver.Imagen;
+                driver.Flag = $"{this.imagesContainer.Value}/{driver.Flag}";
+                driver.Imagen = $"{this.imagesContainer.Value}/{driver.Imagen}";
             }
             return drivers;
         }
@@ -65,8 +62,8 @@ namespace BoxBoxApi.Controllers
             {
                 return NotFound();
             }
-            driver.Flag = this.imagesContainer.Value + "/" + driver.Flag;
-            driver.Imagen = this.imagesContainer.Value + "/" + driver.Imagen;
+            driver.Flag = $"{this.imagesContainer.Value}/{driver.Flag}";
+            driver.Imagen = $"{this.imagesContainer.Value}/{driver.Imagen}";
             return driver;
         }
 
@@ -79,27 +76,31 @@ namespace BoxBoxApi.Controllers
         /// El ID del driver se genera automáticamente dentro del método
         /// </remarks>
         /// <response code="201">Created. Objeto correctamente creado en la BD.</response>        
-        /// <response code="500">BBDD. No se ha creado el objeto en la BD. Error en la BBDD.</response>/// 
+        /// <response code="403">Forbidden. El usuario no tiene permisos para crear un Driver.</response>
+        /// <response code="500">BBDD. No se ha creado el objeto en la BD. Error en la BBDD.</response> 
         [HttpPost]
-        [Authorize]
+        [Authorize(Roles = "1")]
         [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult> Post(Driver driver)
         {
             await this.repo.CreateDriverAsync(driver);
-
-            return Ok();
+            return CreatedAtAction(nameof(Get), new { id = driver.DriverID }, driver);
         }
+
         // PUT api/drivers
         /// <summary>
         /// Modifica un Driver en la BBDD mediante su ID, tabla Drivers
         /// </summary>
-        /// <response code="201">Created. Objeto correctamente creado en la BD.</response>        
+        /// <response code="200">OK. El objeto ha sido actualizado correctamente.</response>
+        /// <response code="403">Forbidden. El usuario no tiene permisos para modificar esta Driver.</response>
         /// <response code="404">NotFound. No se ha encontrado el objeto solicitado.</response>
-        /// <response code="500">BBDD. No se ha creado el objeto en la BD. Error en la BBDD.</response>/// 
+        /// <response code="500">BBDD. No se ha creado el objeto en la BD. Error en la BBDD.</response>
         [HttpPut]
-        [Authorize]
-        [ProducesResponseType(StatusCodes.Status201Created)]
+        [Authorize(Roles = "1")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult> Put(Driver driver)
@@ -122,14 +123,16 @@ namespace BoxBoxApi.Controllers
         /// Enviaremos el ID mediante la URL
         /// </remarks>
         /// <param name="id">ID del Driver a eliminar</param>
-        /// <response code="201">Deleted. Objeto eliminado en la BBDD.</response> 
+        /// <response code="200">OK. Objeto eliminado en la BBDD.</response> 
+        /// <response code="403">Forbidden. El usuario no tiene permisos para eliminar esta Driver.</response>
         /// <response code="404">NotFound. No se ha encontrado el objeto solicitado.</response>    
-        /// <response code="500">BBDD. No se ha eliminado el objeto en la BD. Error en la BBDD.</response>/// 
+        /// <response code="500">BBDD. No se ha eliminado el objeto en la BD. Error en la BBDD.</response> 
         [HttpDelete("{id}")]
-        [Authorize]
-        [ProducesResponseType(StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [Authorize(Roles = "1")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult> Delete(int id)
         {
             Driver driver = await this.repo.FindDriverAsync(id);

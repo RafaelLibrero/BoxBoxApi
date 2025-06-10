@@ -13,16 +13,15 @@ namespace BoxBoxApi.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-        private RepositoryBoxBox repo;
-        private SecretClient secretClient;
-        private KeyVaultSecret imagesContainer;
+        private readonly RepositoryBoxBox repo;
+        private readonly SecretClient secretClient;
+        private readonly KeyVaultSecret imagesContainer;
 
         public UsersController(RepositoryBoxBox repo, SecretClient secretClient)
         {
             this.repo = repo;
             this.secretClient = secretClient;
-            this.imagesContainer =
-                this.secretClient.GetSecret("ImagesContainer");
+            this.imagesContainer = this.secretClient.GetSecret("ImagesContainer");
         }
 
         // GET: api/users
@@ -30,12 +29,14 @@ namespace BoxBoxApi.Controllers
         /// Obtiene el conjunto de Users, tabla Users.
         /// </summary>
         /// <remarks>
-        /// Método para devolver todos las Users de la BBDD
+        /// Método para devolver todos los Users de la BBDD.
         /// </remarks>
         /// <response code="200">OK. Devuelve el objeto solicitado.</response>        
+        /// <response code="403">Forbidden. El usuario no tiene permisos para acceder a esta lista.</response>
         [HttpGet]
-        [Authorize]
+        [Authorize(Roles = "1")]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult<List<UserProfileDto>>> Get()
         {
             var users = await this.repo.GetUsersAsync();
@@ -44,7 +45,7 @@ namespace BoxBoxApi.Controllers
             {
                 UserId = user.UserId,
                 UserName = user.UserName,
-                Email = null, // No se expone en la lista pública
+                Email = user.Email, 
                 ProfilePicture = this.imagesContainer.Value + "/" + user.ProfilePicture,
                 TotalPosts = user.TotalPosts,
                 TeamId = user.TeamId,
@@ -62,7 +63,7 @@ namespace BoxBoxApi.Controllers
         /// Obtiene un User por su Id, tabla User.
         /// </summary>
         /// <remarks>
-        /// Permite buscar un objeto User por su ID
+        /// Permite buscar un objeto User por su ID.
         /// </remarks>
         /// <param name="id">Id (GUID) del objeto User.</param>
         /// <response code="200">OK. Devuelve el objeto solicitado.</response>        
@@ -103,20 +104,20 @@ namespace BoxBoxApi.Controllers
             return Ok(userProfile);
         }
 
-            // POST api/users
-            /// <summary>
-            /// Crea un nuevo User en la BBDD, tabla Users
-            /// </summary>
-            /// <remarks>
-            /// Este método inserta un nuevo User enviando el Objeto JSON
-            /// El ID del user se genera automáticamente dentro del método
-            /// </remarks>
-            /// <param name="username">Nombre de usuario del User</param>
-            /// <param name="email">Email del User</param>
-            /// <param name="password">Contraseña del User</param>
-            /// <response code="201">Created. Objeto correctamente creado en la BD.</response>        
-            /// <response code="500">BBDD. No se ha creado el objeto en la BD. Error en la BBDD.</response>/// 
-            [HttpPost]
+        // POST api/users
+        /// <summary>
+        /// Crea un nuevo User en la BBDD, tabla Users.
+        /// </summary>
+        /// <remarks>
+        /// Este método inserta un nuevo User enviando el Objeto JSON.
+        /// El ID del user se genera automáticamente dentro del método.
+        /// </remarks>
+        /// <param name="username">Nombre de usuario del User.</param>
+        /// <param name="email">Email del User.</param>
+        /// <param name="password">Contraseña del User.</param>
+        /// <response code="201">Created. Objeto correctamente creado en la BD.</response>        
+        /// <response code="500">BBDD. No se ha creado el objeto en la BD. Error en la BBDD.</response> 
+        [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<User>> Post(string username, string email, string password)
@@ -127,14 +128,14 @@ namespace BoxBoxApi.Controllers
 
         // PUT api/users
         /// <summary>
-        /// Modifica un Users en la BBDD mediante su ID, tabla Users
+        /// Modifica un User en la BBDD mediante su ID, tabla Users.
         /// </summary>
         /// <response code="201">Created. Objeto correctamente creado en la BD.</response>        
         /// <response code="404">NotFound. No se ha encontrado el objeto solicitado.</response>
-        /// <response code="500">BBDD. No se ha creado el objeto en la BD. Error en la BBDD.</response>/// 
+        /// <response code="500">BBDD. No se ha creado el objeto en la BD. Error en la BBDD.</response>
         [HttpPut]
         [Authorize]
-        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult> Put([FromBody] UserRequestDto dto)
@@ -154,20 +155,22 @@ namespace BoxBoxApi.Controllers
 
         // DELETE api/users/{id}
         /// <summary>
-        /// Elimina un User en la BBDD mediante su ID. Tabla Users
+        /// Elimina un User en la BBDD mediante su ID. Tabla Users.
         /// </summary>
         /// <remarks>
-        /// Enviaremos el ID mediante la URL
+        /// Enviaremos el ID mediante la URL.
         /// </remarks>
-        /// <param name="id">ID del User a eliminar</param>
-        /// <response code="201">Deleted. Objeto eliminado en la BBDD.</response> 
+        /// <param name="id">ID del User a eliminar.</param>
+        /// <response code="200">OK. Objeto eliminado en la BBDD.</response> 
+        /// <response code="403">Forbidden. El usuario no tiene permisos suficientes para eliminar este usuario.</response>  // Documentando el código de estado 403
         /// <response code="404">NotFound. No se ha encontrado el objeto solicitado.</response>    
-        /// <response code="500">BBDD. No se ha eliminado el objeto en la BD. Error en la BBDD.</response>/// 
+        /// <response code="500">BBDD. No se ha eliminado el objeto en la BD. Error en la BBDD.</response> 
         [HttpDelete("{id}")]
-        [Authorize]
-        [ProducesResponseType(StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [Authorize(Roles = "1")]
+        [ProducesResponseType(StatusCodes.Status200OK)]  
+        [ProducesResponseType(StatusCodes.Status403Forbidden)] 
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult> Delete(int id)
         {
             User user = await this.repo.FindUserAsync(id);
@@ -186,14 +189,16 @@ namespace BoxBoxApi.Controllers
         /// <remarks>
         /// </remarks>
         /// <response code="200">OK. Devuelve el objeto solicitado.</response>        
-        /// <response code="404">NotFound. No se ha encontrado el objeto solicitado.</response>        
-        /// <response code="401">NotAuthorized. No autorizado, sin Token válido.</response>         
+        /// <response code="401">Unauthorized. No autorizado, sin Token válido.</response>        
+        /// <response code="404">NotFound. No se ha encontrado el objeto solicitado.</response>         
         [Authorize]
         [HttpGet]
         [Route("[action]")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<UserProfileDto>> Profile()
         {
-
             Claim claimUser = HttpContext.User.Claims
                 .SingleOrDefault(x => x.Type == "UserData");
             string jsonUser = claimUser.Value;
@@ -219,6 +224,5 @@ namespace BoxBoxApi.Controllers
 
             return Ok(userProfile);
         }
-
     }
 }

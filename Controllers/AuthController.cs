@@ -13,8 +13,8 @@ namespace BoxBoxApi.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private RepositoryBoxBox repo;
-        private HelperToken helper;
+        private readonly RepositoryBoxBox repo;
+        private readonly HelperToken helper;
 
         public AuthController
             (RepositoryBoxBox repo, HelperToken helper)
@@ -53,7 +53,8 @@ namespace BoxBoxApi.Controllers
                 string jsonUser = JsonConvert.SerializeObject(user);
                 Claim[] infoUser = new[]
                 {
-                    new Claim("UserData", jsonUser)
+                    new Claim("UserData", jsonUser),
+                    new Claim(ClaimTypes.Role, user.RolId.ToString())
                 };
                 JwtSecurityToken token =
                     new JwtSecurityToken(
