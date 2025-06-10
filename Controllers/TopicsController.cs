@@ -80,7 +80,7 @@ namespace BoxBoxApi.Controllers
         /// <summary>
         /// Modifica un Topic en la BBDD mediante su ID, tabla Topic.
         /// </summary>
-        /// <response code="201">Created. Objeto correctamente creado en la BD.</response>    
+        /// <response code="200">OK. El objeto ha sido actualizado correctamente.</response>
         /// <response code="403">Forbidden. El usuario no tiene permisos para crear un topic.</response> 
         /// <response code="404">NotFound. No se ha encontrado el objeto solicitado.</response>
         /// <response code="500">BBDD. No se ha creado el objeto en la BD. Error en la BBDD.</response>

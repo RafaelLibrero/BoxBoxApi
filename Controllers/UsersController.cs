@@ -130,16 +130,29 @@ namespace BoxBoxApi.Controllers
         /// <summary>
         /// Modifica un User en la BBDD mediante su ID, tabla Users.
         /// </summary>
-        /// <response code="201">Created. Objeto correctamente creado en la BD.</response>        
+        /// <response code="200">OK. El objeto ha sido actualizado correctamente.</response>       
+        /// <response code="403">Forbidden. El usuario no tiene permiso para modificar este usuario.</response>
         /// <response code="404">NotFound. No se ha encontrado el objeto solicitado.</response>
         /// <response code="500">BBDD. No se ha creado el objeto en la BD. Error en la BBDD.</response>
         [HttpPut]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult> Put([FromBody] UserRequestDto dto)
         {
+            Claim claimUser = HttpContext.User.Claims
+                .SingleOrDefault(x => x.Type == "UserData");
+            string jsonUser = claimUser.Value;
+            User authenticatedUser = JsonConvert.DeserializeObject<User>(jsonUser);
+            int authenticatedUserId = authenticatedUser.UserId;
+
+            if (authenticatedUserId != dto.UserId)
+            {
+                return Forbid();
+            }
+
             var user = await this.repo.FindUserAsync(dto.UserId);
             if (user == null) return NotFound();
 
@@ -150,6 +163,7 @@ namespace BoxBoxApi.Controllers
             user.Biography = dto.Biography;
 
             await this.repo.UpdateUserAsync(user);
+
             return Ok();
         }
 
@@ -162,7 +176,7 @@ namespace BoxBoxApi.Controllers
         /// </remarks>
         /// <param name="id">ID del User a eliminar.</param>
         /// <response code="200">OK. Objeto eliminado en la BBDD.</response> 
-        /// <response code="403">Forbidden. El usuario no tiene permisos suficientes para eliminar este usuario.</response>  // Documentando el código de estado 403
+        /// <response code="403">Forbidden. El usuario no tiene permisos suficientes para eliminar este usuario.</response>
         /// <response code="404">NotFound. No se ha encontrado el objeto solicitado.</response>    
         /// <response code="500">BBDD. No se ha eliminado el objeto en la BD. Error en la BBDD.</response> 
         [HttpDelete("{id}")]
