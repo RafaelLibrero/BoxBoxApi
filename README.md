@@ -59,11 +59,11 @@ Desde esta URL puedes:
 
 | Método | Ruta                  | Descripción                       | Autenticación |
 |--------|------------------------|-----------------------------------|----------------|
-| GET    | `/api/users`           | Obtener todos los usuarios        | 🔐 Requiere token |
+| GET    | `/api/users`           | Obtener todos los usuarios        | 🔐 Requiere token con rol **admin** |
 | GET    | `/api/users/{id}`      | Obtener un usuario por ID         | ❌ Pública        |
 | GET    | `/api/users/profile`   | Obtener el perfil del usuario logueado| 🔐 Requiere token |
 | POST   | `/api/auth/login`      | Iniciar sesión y obtener JWT      | ❌ Pública        |   
 | POST   | `/api/users`           | Crear un nuevo usuario            | ❌ Pública        |
 | PUT    | `/api/users/{id}`      | Actualizar un usuario existente   | 🔐 Requiere token |
-| DELETE | `/api/users/{id}`      | Eliminar un usuario               | 🔐 Requiere token |
+| DELETE | `/api/users/{id}`      | Eliminar un usuario               | 🔐 Requiere token con rol **admin** |
 
