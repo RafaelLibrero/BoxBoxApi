@@ -11,6 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddTransient<RepositoryBoxBox>();
+builder.Services.AddTransient<IChatRepository, ChatRepository>();
 
 builder.Services.AddAzureClients(factory =>
 {

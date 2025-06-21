@@ -1,4 +1,5 @@
-﻿using BoxBoxModels;
+﻿using BoxBoxApi.Models;
+using BoxBoxModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace BoxBoxApi.Data
@@ -16,5 +17,7 @@ namespace BoxBoxApi.Data
         public DbSet<Driver> Drivers { get; set; }
         public DbSet<Team> Teams { get; set; }
         public DbSet<Race> Races { get; set; }
+        public DbSet<Chat> Chats { get; set; }
+        public DbSet<Message> Messages { get; set; }
     }
 }
