@@ -11,6 +11,7 @@ La API está desplegada en **Azure App Service** y conectada a **Azure SQL Datab
 <img src="https://img.shields.io/badge/REST%20API-Implemented-brightgreen?style=for-the-badge"/>
 <img src="https://img.shields.io/badge/Entity%20Framework-Core-blue?style=for-the-badge"/>
 <img src="https://img.shields.io/badge/Swagger-UI-orange?style=for-the-badge&logo=swagger&logoColor=white"/>
+<img src="https://img.shields.io/badge/Azure-Key%20Vault-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white"/> 
 <img src="https://img.shields.io/github/license/rafaellibrero/boxboxapi?style=for-the-badge"/>
 
 </div>
