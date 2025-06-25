@@ -1,6 +1,7 @@
 using Azure.Security.KeyVault.Secrets;
 using BoxBoxApi.Data;
 using BoxBoxApi.Helpers;
+using BoxBoxApi.Mappings;
 using BoxBoxApi.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Azure;
@@ -44,7 +45,8 @@ builder.Services.AddOpenApiDocument(document =>
     document.OperationProcessors.Add(
     new AspNetCoreOperationSecurityScopeProcessor("JWT"));
 });
-
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+builder.Services.AddAutoMapper(typeof(UserProfile));
 
 HelperToken helper = new HelperToken(secretClient);
 builder.Services.AddAuthentication(helper.GetAuthenticateSchema())

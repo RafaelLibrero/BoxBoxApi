@@ -1,4 +1,5 @@
-﻿using Azure.Security.KeyVault.Secrets;
+﻿using AutoMapper;
+using Azure.Security.KeyVault.Secrets;
 using BoxBoxApi.DTOs;
 using BoxBoxApi.Repositories;
 using BoxBoxModels;
@@ -16,12 +17,14 @@ namespace BoxBoxApi.Controllers
         private readonly RepositoryBoxBox repo;
         private readonly SecretClient secretClient;
         private readonly KeyVaultSecret imagesContainer;
+        private readonly IMapper _mapper;
 
-        public UsersController(RepositoryBoxBox repo, SecretClient secretClient)
+        public UsersController(RepositoryBoxBox repo, SecretClient secretClient, IMapper mapper)
         {
             this.repo = repo;
             this.secretClient = secretClient;
             this.imagesContainer = this.secretClient.GetSecret("ImagesContainer");
+            _mapper = mapper;
         }
 
         // GET: api/users
@@ -41,19 +44,13 @@ namespace BoxBoxApi.Controllers
         {
             var users = await this.repo.GetUsersAsync();
 
-            var userDtos = users.Select(user => new UserProfileDto
+            var userDtos = _mapper.Map<List<UserProfileDto>>(users);
+
+            foreach (var dto in userDtos)
             {
-                UserId = user.UserId,
-                UserName = user.UserName,
-                Email = user.Email, 
-                ProfilePicture = this.imagesContainer.Value + "/" + user.ProfilePicture,
-                TotalPosts = user.TotalPosts,
-                TeamId = user.TeamId,
-                DriverId = user.DriverId,
-                RegistrationDate = user.RegistrationDate,
-                LastAccess = user.LastAccess,
-                Biography = user.Biography
-            }).ToList();
+                var user = users.First(u => u.UserId == dto.UserId);
+                dto.ProfilePicture = this.imagesContainer.Value + "/" + user.ProfilePicture;
+            }
 
             return Ok(userDtos);
         }
@@ -87,19 +84,12 @@ namespace BoxBoxApi.Controllers
                 }
             }
 
-            var userProfile = new UserProfileDto
-            {
-                UserId = user.UserId,
-                UserName = user.UserName,
-                Email = (user.UserId == currentUserId) ? user.Email : null,
-                ProfilePicture = this.imagesContainer.Value + "/" + user.ProfilePicture,
-                TotalPosts = user.TotalPosts,
-                TeamId = user.TeamId,
-                DriverId = user.DriverId,
-                RegistrationDate = user.RegistrationDate,
-                LastAccess = user.LastAccess,
-                Biography = user.Biography
-            };
+            var userProfile = _mapper.Map<UserProfileDto>(user);
+
+            if (user.UserId != currentUserId)
+                userProfile.Email = null;
+
+            userProfile.ProfilePicture = this.imagesContainer.Value + "/" + user.ProfilePicture;
 
             return Ok(userProfile);
         }
@@ -156,11 +146,13 @@ namespace BoxBoxApi.Controllers
             var user = await this.repo.FindUserAsync(dto.UserId);
             if (user == null) return NotFound();
 
-            user.UserName = dto.UserName;
-            user.ProfilePicture = dto.ProfilePicture ?? user.ProfilePicture;
-            user.TeamId = dto.TeamId;
-            user.DriverId = dto.DriverId;
-            user.Biography = dto.Biography;
+            var originalProfilePicture = user.ProfilePicture;
+            _mapper.Map(dto, user);
+
+            if (dto.ProfilePicture == null)
+            {
+                user.ProfilePicture = originalProfilePicture;
+            }
 
             await this.repo.UpdateUserAsync(user);
 
@@ -222,19 +214,8 @@ namespace BoxBoxApi.Controllers
             User userValid = await this.repo.FindUserAsync(idUser);
             if (userValid == null) return NotFound();
 
-            var userProfile = new UserProfileDto
-            {
-                UserId = userValid.UserId,
-                UserName = userValid.UserName,
-                Email = userValid.Email,
-                ProfilePicture = this.imagesContainer.Value + "/" + userValid.ProfilePicture,
-                TotalPosts = userValid.TotalPosts,
-                TeamId = userValid.TeamId,
-                DriverId = userValid.DriverId,
-                RegistrationDate = userValid.RegistrationDate,
-                LastAccess = userValid.LastAccess,
-                Biography = userValid.Biography
-            };
+            var userProfile = _mapper.Map<UserProfileDto>(userValid);
+            userProfile.ProfilePicture = this.imagesContainer.Value + "/" + userValid.ProfilePicture;
 
             return Ok(userProfile);
         }
