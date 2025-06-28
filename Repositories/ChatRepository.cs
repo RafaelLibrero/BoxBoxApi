@@ -21,6 +21,7 @@ namespace BoxBoxApi.Repositories
         public async Task<IEnumerable<Chat>> GetUserChatsAsync(int userId)
         {
             return await _context.Chats
+                .Include(c => c.Messages)
                 .Where(c => c.User1Id == userId || c.User2Id == userId)
                 .ToListAsync();
         }

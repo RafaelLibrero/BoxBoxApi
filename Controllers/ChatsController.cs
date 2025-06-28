@@ -1,8 +1,11 @@
 ﻿using BoxBoxApi.DTOs;
 using BoxBoxApi.Models;
 using BoxBoxApi.Repositories;
+using BoxBoxModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using System.Security.Claims;
 
 namespace BoxBoxApi.Controllers
 {
@@ -44,18 +47,35 @@ namespace BoxBoxApi.Controllers
         }
 
         // GET: api/chats/user/{userId}
-        [HttpGet("user/{userId}")]
-        public async Task<ActionResult<IEnumerable<ChatDto>>> GetUserChats(int userId)
+        [HttpGet("user")]
+        public async Task<ActionResult<IEnumerable<ChatSummaryDto>>> GetUserChats()
         {
+            Claim claimUser = HttpContext.User.Claims
+                .SingleOrDefault(x => x.Type == "UserData");
+            string jsonUser = claimUser.Value;
+            User user = JsonConvert.DeserializeObject<User>(jsonUser);
+            int userId = user.UserId;
+
             var chats = await _chatRepository.GetUserChatsAsync(userId);
 
-            var chatDtos = chats.Select(chat => new ChatDto
+            var chatDtos = chats.Select(chat => new ChatSummaryDto
             {
                 Id = chat.Id,
                 User1Id = chat.User1Id,
                 User2Id = chat.User2Id,
                 CreatedAt = chat.CreatedAt,
-                Messages = null
+                LastMessage = (chat.Messages != null ?
+                    chat.Messages
+                        .OrderByDescending(m => m.SentAt)
+                        .Select(m => new MessageDto
+                        {
+                            Id = m.Id,
+                            SenderId = m.SenderId,
+                            Content = m.Content,
+                            SentAt = m.SentAt
+                        })
+                        .FirstOrDefault()
+                    : null)
             });
 
             
