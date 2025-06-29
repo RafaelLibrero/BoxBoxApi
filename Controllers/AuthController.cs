@@ -1,6 +1,8 @@
 ﻿using BoxBoxApi.Helpers;
 using BoxBoxApi.Repositories;
 using BoxBoxModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
@@ -13,14 +15,14 @@ namespace BoxBoxApi.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly RepositoryBoxBox repo;
-        private readonly HelperToken helper;
+        private readonly RepositoryBoxBox _repo;
+        private readonly HelperToken _helper;
 
         public AuthController
             (RepositoryBoxBox repo, HelperToken helper)
         {
-            this.repo = repo;
-            this.helper = helper;
+            _repo = repo;
+            _helper = helper;
         }
 
         // POST api/auth/login
@@ -40,7 +42,7 @@ namespace BoxBoxApi.Controllers
         public async Task<ActionResult> Login(LoginModel loginUser)
         {
             User user = await
-                this.repo.LoginUserAsync(loginUser);
+                _repo.LoginUserAsync(loginUser);
             if (user == null)
             {
                 return Unauthorized();
@@ -48,7 +50,7 @@ namespace BoxBoxApi.Controllers
             else
             {
                 SigningCredentials credentials =
-                    new SigningCredentials(this.helper.GetKeyToken()
+                    new SigningCredentials(_helper.GetKeyToken()
                     , SecurityAlgorithms.HmacSha256);
                 string jsonUser = JsonConvert.SerializeObject(user);
                 Claim[] infoUser = new[]
@@ -59,8 +61,8 @@ namespace BoxBoxApi.Controllers
                 JwtSecurityToken token =
                     new JwtSecurityToken(
                         claims: infoUser,
-                        issuer: this.helper.Issuer.Value,
-                        audience: this.helper.Audience.Value,
+                        issuer: _helper.Issuer.Value,
+                        audience: _helper.Audience.Value,
                         signingCredentials: credentials,
                         expires: DateTime.UtcNow.AddMinutes(30),
                         notBefore: DateTime.UtcNow
@@ -72,6 +74,54 @@ namespace BoxBoxApi.Controllers
                         new JwtSecurityTokenHandler().WriteToken(token),
                     });
             }
+        }
+
+        // POST api/auth/refresh
+        /// <summary>
+        /// Refresca el token JWT aunque esté expirado, validando sólo firma, issuer y audience.
+        /// </summary>
+        [HttpPost]
+        [Route("refresh")]
+        public async Task<ActionResult> Refresh()
+        {
+            var authHeader = Request.Headers["Authorization"].ToString();
+            if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
+                return Unauthorized();
+
+            var tokenString = authHeader.Substring("Bearer ".Length).Trim();
+            var handler = new JwtSecurityTokenHandler();
+
+            var validationParameters = _helper.GetTokenValidationParameters();
+            validationParameters.ValidateLifetime = false; // Ignora expiración para refrescar
+
+            ClaimsPrincipal principal;
+            try
+            {
+                principal = handler.ValidateToken(tokenString, validationParameters, out SecurityToken validatedToken);
+            }
+            catch
+            {
+                return Unauthorized();
+            }
+
+            var credentials = new SigningCredentials(_helper.GetKeyToken(), SecurityAlgorithms.HmacSha256);
+
+            var newToken = new JwtSecurityToken(
+                issuer: _helper.Issuer.Value,
+                audience: _helper.Audience.Value,
+                claims: principal.Claims,
+                expires: DateTime.UtcNow.AddMinutes(30),
+                signingCredentials: credentials
+            );
+
+            var newTokenString = handler.WriteToken(newToken);
+
+            await Task.Yield(); // Simula async, opcional
+
+            return Ok(new
+            {
+                response = newTokenString
+            });
         }
     }
 }
