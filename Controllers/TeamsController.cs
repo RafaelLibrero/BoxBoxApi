@@ -36,7 +36,7 @@ namespace BoxBoxApi.Controllers
             List<Team> teams = await this.repo.GetTeamsAsync();
             foreach (Team team in teams)
             {
-                team.Logo = $"{this.imagesContainer.Value}/{team.Logo}";
+                team.Logo = $"{this.imagesContainer.Value}/teams/{team.Logo}";
             }
             return teams;
         }
@@ -61,7 +61,7 @@ namespace BoxBoxApi.Controllers
             {
                 return NotFound();
             }
-            team.Logo = $"{this.imagesContainer.Value}/{team.Logo}";
+            team.Logo = $"{this.imagesContainer.Value}/teams/{team.Logo}";
             return team;
         }
 

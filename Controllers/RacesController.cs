@@ -36,7 +36,7 @@ namespace BoxBoxApi.Controllers
             List<Race> races = await this.repo.GetRacesAsync();
             foreach (Race race in races)
             {
-                race.Image = $"{this.imagesContainer.Value}/{race.Image}";
+                race.Image = $"{this.imagesContainer.Value}/circuits/{race.Image}";
             }
             return races;
         }
@@ -61,7 +61,7 @@ namespace BoxBoxApi.Controllers
             {
                 return NotFound();
             }
-            race.Image = $"{this.imagesContainer.Value}/{race.Image}";
+            race.Image = $"{this.imagesContainer.Value}/circuits/{race.Image}";
             return race;
         }
 

@@ -36,8 +36,8 @@ namespace BoxBoxApi.Controllers
             List<Driver> drivers = await this.repo.GetDriversAsync();
             foreach (Driver driver in drivers)
             {
-                driver.Flag = $"{this.imagesContainer.Value}/{driver.Flag}";
-                driver.Imagen = $"{this.imagesContainer.Value}/{driver.Imagen}";
+                driver.Flag = $"{this.imagesContainer.Value}/flags/{driver.Flag}";
+                driver.Imagen = $"{this.imagesContainer.Value}/drivers/{driver.Imagen}";
             }
             return drivers;
         }
@@ -62,8 +62,8 @@ namespace BoxBoxApi.Controllers
             {
                 return NotFound();
             }
-            driver.Flag = $"{this.imagesContainer.Value}/{driver.Flag}";
-            driver.Imagen = $"{this.imagesContainer.Value}/{driver.Imagen}";
+            driver.Flag = $"{this.imagesContainer.Value}/flags/{driver.Flag}";
+            driver.Imagen = $"{this.imagesContainer.Value}/drivers/{driver.Imagen}";
             return driver;
         }
 
