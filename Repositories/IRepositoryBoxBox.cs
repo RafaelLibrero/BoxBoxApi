@@ -30,7 +30,7 @@ namespace BoxBoxApi.Repositories
 
         Task<PostsPaginado> GetPostsConversationAsync(int posicion, int conversationId);
         Task<Post> FindPostAsync(int postId);
-        Task CreatePostAsync(CreatePostDto dto);
+        Task<Post> CreatePostAsync(CreatePostDto dto);
         Task UpdatePostAsync(Post posteo);
         Task DeletePostAsync(int postId);
         Task<List<Post>> GetReportedPosts();

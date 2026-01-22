@@ -1,8 +1,10 @@
 ﻿using BoxBoxApi.DTOs;
+using BoxBoxApi.Hubs;
 using BoxBoxApi.Repositories;
 using BoxBoxModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace BoxBoxApi.Controllers
 {
@@ -11,10 +13,12 @@ namespace BoxBoxApi.Controllers
     public class PostsController : ControllerBase
     {
         private RepositoryBoxBox repo;
+        private readonly IHubContext<ConversationHub> hubContext;
 
-        public PostsController (RepositoryBoxBox repo)
+        public PostsController (RepositoryBoxBox repo, IHubContext<ConversationHub> hubContext)
         {
             this.repo = repo;
+            this.hubContext = hubContext;
         }
 
         // GET api/posts/get/{posicion}/{conversationId}
@@ -74,7 +78,13 @@ namespace BoxBoxApi.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult> Post(CreatePostDto post)
         {
-            await this.repo.CreatePostAsync(post);
+            Post newPost = await this.repo.CreatePostAsync(post);
+
+            if (newPost != null)
+            {
+                await this.hubContext.Clients.Group($"conversation_{post.ConversationId}")
+                    .SendAsync("NewPost", newPost);
+            }
 
             return Ok();
         }

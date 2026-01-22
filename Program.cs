@@ -1,6 +1,7 @@
 using Azure.Security.KeyVault.Secrets;
 using BoxBoxApi.Data;
 using BoxBoxApi.Helpers;
+using BoxBoxApi.Hubs;
 using BoxBoxApi.Mappings;
 using BoxBoxApi.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -53,6 +54,7 @@ builder.Services.AddAuthentication(helper.GetAuthenticateSchema())
     .AddJwtBearer(helper.GetJwtBearerOptions());
 builder.Services.AddTransient<HelperToken>(x => helper);
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
@@ -71,5 +73,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHub<ConversationHub>("/hubs/conversation");
 
 app.Run();

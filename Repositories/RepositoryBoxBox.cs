@@ -355,7 +355,7 @@ namespace BoxBoxApi.Repositories
             }
         }
 
-        public async Task CreatePostAsync(CreatePostDto dto)
+        public async Task<Post> CreatePostAsync(CreatePostDto dto)
         {
             Post post = new Post();
             post.PostId = await this.GetMaxPostId();
@@ -367,6 +367,8 @@ namespace BoxBoxApi.Repositories
 
             this.context.Posts.Add(post);
             await this.context.SaveChangesAsync();
+
+            return post;
         }
 
         public async Task UpdatePostAsync(Post posteo)
