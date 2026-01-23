@@ -5,7 +5,7 @@ namespace BoxBoxApi.Repositories
 {
     public interface IRepositoryBoxBox
     {
-        Task<User> Register(string userName, string email, string password);
+        Task<User> Register(string username, string email, string password);
         Task<User> LoginUserAsync(LoginModel loginUser);
         Task<List<User>> GetUsersAsync();
         Task<User> FindUserAsync(int userId);

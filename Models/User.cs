@@ -11,8 +11,8 @@ namespace BoxBoxModels
         [Column("UserID")]
         public int UserId { get; set; }
         [Required]
-        [Column("UserName")]
-        public string UserName { get; set; }
+        [Column("Name")]
+        public string Name { get; set; }
         [EmailAddress]
         [Column("Email")]
         public string? Email { get; set; }
@@ -36,6 +36,8 @@ namespace BoxBoxModels
         public string Salt { get; set; }
         [Column("Biography")]
         public string? Biography { get; set; }
+        [Column("Username")]
+        public string Username { get; set; }
 
     }
 }

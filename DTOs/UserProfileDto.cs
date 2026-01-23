@@ -12,5 +12,6 @@
         public DateTime RegistrationDate { get; set; }
         public DateTime LastAccess { get; set; }
         public string? Biography { get; set; }
+        public string Name { get; set; }
     }
 }

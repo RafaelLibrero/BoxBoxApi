@@ -31,11 +31,11 @@ namespace BoxBoxApi.Repositories
             }
         }
 
-        public async Task<User> Register(string userName, string email, string password)
+        public async Task<User> Register(string username, string email, string password)
         {
             User user = new User();
             user.UserId = await this.GetMaxUserId();
-            user.UserName = userName;
+            user.Name = "";
             user.Email = email.ToLower();
             user.Salt = HelperTools.GenerateSalt();
             user.Password = HelperCryptography.EncryptPassword(password, user.Salt);
@@ -46,6 +46,7 @@ namespace BoxBoxApi.Repositories
             user.DriverId = null;
             user.TeamId = null;
             user.Biography = null;
+            user.Username = username;
 
             this.context.Users.Add(user);
             await this.context.SaveChangesAsync();
@@ -99,7 +100,7 @@ namespace BoxBoxApi.Repositories
         public async Task UpdateUserAsync(User user)
         {
             User usuario = await this.FindUserAsync(user.UserId);
-            usuario.UserName = user.UserName;
+            usuario.Name = user.Name;
             usuario.ProfilePicture = user.ProfilePicture;
             usuario.TeamId = user.TeamId;
             usuario.DriverId = user.DriverId;
