@@ -46,8 +46,11 @@ builder.Services.AddOpenApiDocument(document =>
     document.OperationProcessors.Add(
     new AspNetCoreOperationSecurityScopeProcessor("JWT"));
 });
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-builder.Services.AddAutoMapper(typeof(UserProfile));
+
+builder.Services.AddAutoMapper(
+    cfg => { },
+    typeof(UserProfile)
+);
 
 HelperToken helper = new HelperToken(secretClient);
 builder.Services.AddAuthentication(helper.GetAuthenticateSchema())
